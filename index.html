@@ -2521,11 +2521,88 @@
       document.getElementById('modal-overlay').classList.add('open');
     }
     function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-    function sendRequest() {
+   function sendRequest() {
+  const nome = document.getElementById('mf-nome').value.trim();
+  const cognome = document.getElementById('mf-cognome').value.trim();
+  const email = document.getElementById('mf-email').value.trim();
+  const tel = document.getElementById('mf-tel').value.trim();
+  const msg = document.getElementById('mf-msg').value.trim();
+
+  if (!modalApt) {
+    alert('Seleziona prima un appartamento.');
+    return;
+  }
+
+  if (!nome || !cognome || !email || !tel) {
+    alert('Compila nome, cognome, email e telefono.');
+    return;
+  }
+
+  const s = bs[modalApt];
+  if (!s.ci || !s.co) {
+    alert('Seleziona prima check-in e check-out.');
+    return;
+  }
+
+  let nights = 0;
+  for (let d = new Date(s.ci); d < s.co; d.setDate(d.getDate() + 1)) {
+    nights++;
+  }
+
+  const appartamento = modalApt === 'eddy' ? 'Eddy&Sofy' : 'Floyd';
+  const checkIn = fmt(s.ci) + ' ' + s.ci.getFullYear();
+  const checkOut = fmt(s.co) + ' ' + s.co.getFullYear();
+  const ospiti = s.guests;
+
+  const payload = {
+    appartamento: appartamento,
+    check_in: checkIn,
+    check_out: checkOut,
+    notti: nights,
+    ospiti: ospiti,
+    nome: nome,
+    cognome: cognome,
+    email: email,
+    telefono: tel,
+    messaggio: msg || 'Nessun messaggio'
+  };
+
+  const btn = document.querySelector('.modal-submit');
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Invio in corso...';
+
+  fetch('https://formspree.io/f/meernelp', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Invio non riuscito');
+      }
+
       document.getElementById('modal-form').style.display = 'none';
       document.getElementById('modal-ok').style.display = 'block';
-    }
 
+      document.getElementById('mf-nome').value = '';
+      document.getElementById('mf-cognome').value = '';
+      document.getElementById('mf-email').value = '';
+      document.getElementById('mf-tel').value = '';
+      document.getElementById('mf-msg').value = '';
+    })
+    .catch((error) => {
+      alert('Errore nell’invio della richiesta. Riprova. Dettaglio: ' + error.message);
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = oldText;
+    });
+}
     /* ══════════════════════════════════════════
        ADMIN
     ══════════════════════════════════════════ */
