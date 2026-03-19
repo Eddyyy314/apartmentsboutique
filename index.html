@@ -2338,7 +2338,11 @@
     const MONTHS = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
       'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
     const MAX = { eddy: 6, floyd: 4 };
-    const cal = { eddy: {}, floyd: {} };  // booked days data
+    const cal = JSON.parse(localStorage.getItem('bookingCal')) || { eddy: {}, floyd: {} };
+
+function saveCal() {
+  localStorage.setItem('bookingCal', JSON.stringify(cal));
+}
 
     function dk(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
     function isBlocked(apt, d) { return (cal[apt][dk(d)] || {}).status === 'booked'; }
@@ -2672,22 +2676,50 @@ function admSwitch(apt) {
       document.getElementById('de-box').style.display = 'block';
     }
     function closeDe() { document.getElementById('de-ov').style.display = 'none'; document.getElementById('de-box').style.display = 'none'; }
-    function saveDe() {
-      cal[deApt][deKey] = { status: document.getElementById('de-st').value, price: document.getElementById('de-pr').value || null, note: document.getElementById('de-no').value };
-      closeDe(); admRender(deApt);
-      // also re-render booking cal if visible
-      if (document.getElementById('bwcal-' + deApt).classList.contains('open')) renderCal(deApt);
-    }
+   function saveDe() {
+  cal[deApt][deKey] = {
+    status: document.getElementById('de-st').value,
+    price: document.getElementById('de-pr').value || null,
+    note: document.getElementById('de-no').value
+  };
+
+  saveCal();
+  closeDe();
+  admRender(deApt);
+  renderCal(deApt);
+}
     function blkMonth(apt, st) {
-      const s = adm[apt], days = new Date(s.y, s.m + 1, 0).getDate();
-      for (let d = 1; d <= days; d++) { const dt = new Date(s.y, s.m, d); if (!isPast(dt)) { const k = dk(dt); cal[apt][k] = Object.assign(cal[apt][k] || {}, { status: st }); } }
-      admRender(apt);
+  const s = adm[apt], days = new Date(s.y, s.m + 1, 0).getDate();
+
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(s.y, s.m, d);
+    if (!isPast(dt)) {
+      const k = dk(dt);
+      cal[apt][k] = Object.assign(cal[apt][k] || {}, { status: st });
     }
-    function blkWE(apt, st) {
-      const s = adm[apt], days = new Date(s.y, s.m + 1, 0).getDate();
-      for (let d = 1; d <= days; d++) { const dt = new Date(s.y, s.m, d); const dow = dt.getDay(); if ((dow === 0 || dow === 6) && !isPast(dt)) { const k = dk(dt); cal[apt][k] = Object.assign(cal[apt][k] || {}, { status: st }); } }
-      admRender(apt);
+  }
+
+  saveCal();
+  admRender(apt);
+  renderCal(apt);
+}
+   function blkWE(apt, st) {
+  const s = adm[apt], days = new Date(s.y, s.m + 1, 0).getDate();
+
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(s.y, s.m, d);
+    const dow = dt.getDay();
+
+    if ((dow === 0 || dow === 6) && !isPast(dt)) {
+      const k = dk(dt);
+      cal[apt][k] = Object.assign(cal[apt][k] || {}, { status: st });
     }
+  }
+
+  saveCal();
+  admRender(apt);
+  renderCal(apt);
+}
 
     // Admin via URL hash
     if (location.hash === '#admin-edoardo') openAdmin();
