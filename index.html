@@ -2607,13 +2607,21 @@
     const adm = { eddy: { y: new Date().getFullYear(), m: new Date().getMonth() }, floyd: { y: new Date().getFullYear(), m: new Date().getMonth() } };
     let deApt = null, deKey = null;
 
-    function openAdmin() { document.getElementById('admin').style.display = 'block'; document.body.style.overflow = 'hidden'; admRender('eddy'); admRender('floyd'); }
-    function closeAdmin() { document.getElementById('admin').style.display = 'none'; document.body.style.overflow = ''; }
-    function admSwitch(apt) {
-      document.querySelectorAll('.adm-t').forEach((t, i) => t.classList.toggle('on', ['eddy', 'floyd'][i] === apt));
-      document.querySelectorAll('.adm-pane').forEach(p => p.classList.remove('on'));
-      document.getElementById('adm-' + apt).classList.add('on');
-    }
+    function openAdmin() {
+  const password = "Eddyesofy1099"; // cambia qui la password
+  const userInput = prompt("Inserisci la password admin:");
+
+  if (userInput !== password) {
+    alert("Password errata");
+    location.hash = "";
+    return;
+  }
+
+  document.getElementById('admin').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  admRender('eddy');
+  admRender('floyd');
+}
     function admMove(apt, d) {
       const s = adm[apt]; s.m += d;
       if (s.m > 11) { s.m = 0; s.y++; } if (s.m < 0) { s.m = 11; s.y--; }
